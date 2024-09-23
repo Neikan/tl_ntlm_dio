@@ -1,16 +1,19 @@
 name: tl_ntlm_dio
 description: Dio Interceptor to NTLM-auth
 version: 1.0.0
-homepage:
+publish_to: 'none'
 
 environment:
-  sdk: '>=2.2.0 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   dio: any
   dio_cookie_manager: any
   logging: any
-  ntlm: ^2.0.1
+  ntlm:
+    git:
+      url: https://github.com/Neikan/ntlm.git
+      ref: master
   flutter:
     sdk: flutter
 
@@ -18,6 +21,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   path: ^1.6.2
-  system_info: ^0.1.0
+
 
 flutter:

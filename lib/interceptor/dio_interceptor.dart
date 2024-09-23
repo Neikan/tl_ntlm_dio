@@ -32,8 +32,8 @@ class Credentials {
   Credentials({
     this.domain = '',
     this.workstation = '',
-    @required this.username,
-    @required this.password,
+    required this.username,
+    required this.password,
   });
 }
 
@@ -41,7 +41,7 @@ typedef Dio AuthDioCreator();
 
 class NtlmInterceptor extends Interceptor {
   final Credentials credentials;
-  final AuthDioCreator authDioCreator;
+  final AuthDioCreator? authDioCreator;
 //  final CookieJar cookieJar;
 
   NtlmInterceptor(this.credentials, [this.authDioCreator]);
@@ -70,16 +70,16 @@ class NtlmInterceptor extends Interceptor {
   ) async {
     try {
       log.finer(
-        'Intercepted onError. ${e.response?.statusCode} for request ${e.response?.requestOptions?.path}',
+        'Intercepted onError. ${e.response?.statusCode} for request ${e.response?.requestOptions.path}',
       );
 
       if (e.response?.statusCode != HttpStatus.unauthorized) {
         return e;
       }
 
-      log.finer('headers: ${_debugHttpHeaders(e.response.headers)}');
+      log.finer('headers: ${_debugHttpHeaders(e.response!.headers)}');
 
-      final authHeader = e.response.headers[HttpHeaders.wwwAuthenticateHeader];
+      final authHeader = e.response!.headers[HttpHeaders.wwwAuthenticateHeader];
 
       if (authHeader == null || authHeader.first != 'NTLM') {
         log.warning(
@@ -92,7 +92,7 @@ class NtlmInterceptor extends Interceptor {
       // FIXME: remove username from log.
       log.fine('Trying to authenticate request (${credentials.domain}/${credentials.username}).');
 
-      Dio authDio = authDioCreator == null ? Dio() : authDioCreator();
+      Dio authDio = authDioCreator == null ? Dio() : authDioCreator!();
 //      authDio.interceptors.add(CookieManager(cookieJar));
 //        authDio.cookieJar = dio.cookieJar;
 
@@ -106,7 +106,7 @@ class NtlmInterceptor extends Interceptor {
       };
 
       final res1 = await (authDio
-          .get(e.response.requestOptions.path, options: Options(headers: heders)
+          .get(e.response!.requestOptions.path, options: Options(headers: heders)
               // .merge(
               //   validateStatus: (status) => status == HttpStatus.unauthorized || status == HttpStatus.ok,
               //   headers: {
@@ -120,20 +120,21 @@ class NtlmInterceptor extends Interceptor {
         return Future<Response<dynamic>>.error(error, stackTrace);
       }));
 
-      String res2Authenticate = res1.headers[HttpHeaders.wwwAuthenticateHeader]?.first;
+      String? res2Authenticate = res1.headers[HttpHeaders.wwwAuthenticateHeader]?.first;
 
       log.finer('Received type1 message response $res2Authenticate');
 
       if (res2Authenticate == null) {
         log.warning(
-            'No Authenticate header found for response from ${e.response.requestOptions.path}.', e);
+            'No Authenticate header found for response from ${e.response!.requestOptions.path}.',
+            e);
 
         return e;
       }
 
       if (!res2Authenticate.startsWith('NTLM ')) {
         log.warning(
-            'Type1 message response does not return NTLM auth header. ${res1.headers[HttpHeaders.wwwAuthenticateHeader].toList()}');
+            'Type1 message response does not return NTLM auth header. ${res1.headers[HttpHeaders.wwwAuthenticateHeader]?.toList()}');
 
         return e;
       }
@@ -147,7 +148,7 @@ class NtlmInterceptor extends Interceptor {
           password: credentials.password);
 
       final res2 = await (authDio
-          .get(e.response.requestOptions.path,
+          .get(e.response!.requestOptions.path,
               options: Options(
                 headers: {
                   HttpHeaders.authorizationHeader: msg3,
@@ -156,7 +157,7 @@ class NtlmInterceptor extends Interceptor {
           .catchError((error, stackTrace) {
         if (error is DioException) {
           log.fine(
-            'Error during authentication request. ${error?.response?.headers}',
+            'Error during authentication request. ${error.response?.headers}',
             error,
             stackTrace,
           );
@@ -171,14 +172,14 @@ class NtlmInterceptor extends Interceptor {
         return Future<Response<dynamic>>.error(error, stackTrace);
       }));
 
-      log.finer('Received type3 message response. ${res2?.statusCode}.');
+      log.finer('Received type3 message response. ${res2.statusCode}.');
 
       return res2;
     } catch (e, stackTrace) {
-      String msg = 'error:${e?.runtimeType}';
+      String msg = 'error:${e.runtimeType}';
 
       if (e is DioException) {
-        msg = 'code: ${e.response?.statusCode} / ${_debugHttpHeaders(e.response?.headers)}';
+        msg = 'code: ${e.response?.statusCode} / ${_debugHttpHeaders(e.response!.headers)}';
       }
 
       log.warning(
