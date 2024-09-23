@@ -9,7 +9,7 @@ environment:
 dependencies:
   dio: any
   dio_cookie_manager: any
-  logging: ">=0.11.3+2 <1.0.0"
+  logging: any
   ntlm: any
   flutter:
     sdk: flutter
