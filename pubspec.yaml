@@ -10,7 +10,7 @@ dependencies:
   dio: any
   dio_cookie_manager: any
   logging: any
-  ntlm: any
+  ntlm: ^2.0.1
   flutter:
     sdk: flutter
 
